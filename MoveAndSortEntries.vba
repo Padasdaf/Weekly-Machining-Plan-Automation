@@ -1,4 +1,4 @@
-Sub MoveAndSortEntries()
+Sub CopyEntries()
     Dim ws As Worksheet
     Dim builtPlanSheet As Worksheet
     Dim targetSheet As Worksheet
@@ -6,7 +6,6 @@ Sub MoveAndSortEntries()
     Dim lastRow As Long
     Dim i As Long
     Dim targetLastRow As Long
-    Dim rowCount As Long
     
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
@@ -14,9 +13,14 @@ Sub MoveAndSortEntries()
     Set builtPlanSheet = ThisWorkbook.Sheets("Built plan")
     lastRow = builtPlanSheet.Cells(builtPlanSheet.Rows.Count, "H").End(xlUp).Row
     
+    ' Change format of column H to General
+    builtPlanSheet.Columns("H").NumberFormat = "General"
+    
+    ' Iterate through column H starting from row 2
     For i = 2 To lastRow
         entryName = builtPlanSheet.Cells(i, "H").Value
         
+        ' Check if the entryName is not empty
         If entryName <> "" Then
             ' Check if the sheet exists, if not, create it
             On Error Resume Next
@@ -28,25 +32,13 @@ Sub MoveAndSortEntries()
                 targetSheet.Name = entryName
             End If
             
+            ' Find the next empty row in the target sheet
             targetLastRow = targetSheet.Cells(targetSheet.Rows.Count, 1).End(xlUp).Row + 1
+            
+            ' Copy the entire row from the Built plan sheet to the target sheet
             builtPlanSheet.Rows(i).Copy Destination:=targetSheet.Rows(targetLastRow)
         End If
     Next i
-    
-    For i = lastRow To 2 Step -1
-        If Application.WorksheetFunction.CountA(builtPlanSheet.Rows(i)) = 0 Then
-            builtPlanSheet.Rows(i).Delete
-        End If
-    Next i
-    
-    For Each ws In ThisWorkbook.Worksheets
-        If ws.Name <> "Built plan" Then
-            lastRow = ws.Cells(ws.Rows.Count, "K").End(xlUp).Row
-            If lastRow > 1 Then
-                ws.Range("A1:K" & lastRow).Sort Key1:=ws.Range("K1"), Order1:=xlAscending, Header:=xlYes
-            End If
-        End If
-    Next ws
     
     Application.ScreenUpdating = True
     Application.DisplayAlerts = True
