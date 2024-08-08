@@ -5,9 +5,8 @@ Sub MoveAndSortEntries()
     Dim entryName As String
     Dim lastRow As Long
     Dim i As Long
-    Dim rng As Range
     Dim targetLastRow As Long
-    Dim wsName As String
+    Dim rowCount As Long
     
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
@@ -19,6 +18,7 @@ Sub MoveAndSortEntries()
         entryName = builtPlanSheet.Cells(i, "H").Value
         
         If entryName <> "" Then
+            ' Check if the sheet exists, if not, create it
             On Error Resume Next
             Set targetSheet = ThisWorkbook.Sheets(entryName)
             On Error GoTo 0
@@ -28,19 +28,23 @@ Sub MoveAndSortEntries()
                 targetSheet.Name = entryName
             End If
             
-            targetLastRow = targetSheet.Cells(targetSheet.Rows.Count, "H").End(xlUp).Row + 1
+            targetLastRow = targetSheet.Cells(targetSheet.Rows.Count, 1).End(xlUp).Row + 1
             builtPlanSheet.Rows(i).Copy Destination:=targetSheet.Rows(targetLastRow)
-            builtPlanSheet.Rows(i).ClearContents
         End If
     Next i
     
-    builtPlanSheet.UsedRange.SpecialCells(xlCellTypeBlanks).EntireRow.Delete
+    For i = lastRow To 2 Step -1
+        If Application.WorksheetFunction.CountA(builtPlanSheet.Rows(i)) = 0 Then
+            builtPlanSheet.Rows(i).Delete
+        End If
+    Next i
     
     For Each ws In ThisWorkbook.Worksheets
         If ws.Name <> "Built plan" Then
             lastRow = ws.Cells(ws.Rows.Count, "K").End(xlUp).Row
-            Set rng = ws.Range("A1:K" & lastRow)
-            rng.Sort Key1:=ws.Range("K2"), Order1:=xlAscending, Header:=xlYes
+            If lastRow > 1 Then
+                ws.Range("A1:K" & lastRow).Sort Key1:=ws.Range("K1"), Order1:=xlAscending, Header:=xlYes
+            End If
         End If
     Next ws
     
